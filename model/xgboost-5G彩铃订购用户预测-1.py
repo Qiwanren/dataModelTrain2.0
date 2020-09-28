@@ -1,5 +1,3 @@
-import pickle
-
 import pandas as pd
 
 from time import strftime, localtime
@@ -18,11 +16,9 @@ def printTime():
     print(strftime("%Y-%m-%d %H:%M:%S", localtime()))
     return
 
-
 def messagePrint(x):
     print(x)
     print('----------------------------------------')
-
 
 '''
 读取数据，并设置特征名称，返回读取后的数据集

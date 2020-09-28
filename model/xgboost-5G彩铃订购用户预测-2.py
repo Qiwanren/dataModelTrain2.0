@@ -1,7 +1,6 @@
 import pickle
 
 import pandas as pd
-
 from time import strftime, localtime
 import xgboost as xgb
 from sklearn.metrics import roc_auc_score
@@ -9,33 +8,27 @@ from xgboost import plot_importance
 from matplotlib import pyplot as plt
 from builtins import str
 
-
 pd.set_option('display.max_columns', 1000)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_colwidth', 1000)
-
 
 def printTime():
     print(strftime("%Y-%m-%d %H:%M:%S", localtime()))
     return
 
-
 def messagePrint(x):
     print(x)
     print('----------------------------------------')
 
-
 '''
 读取数据，并设置特征名称，返回读取后的数据集
 '''
-
-
 # 打印当前时间
 def readData(path, names):
     train = pd.read_csv(filepath_or_buffer=path, sep=",", names=names, encoding='utf-8')
     return train
 def readData1(path, names):
-    train = pd.read_csv(filepath_or_buffer=path, sep=",", names=names, encoding='utf-8')
+    train = pd.read_csv(filepath_or_buffer=path, sep="|", names=names, encoding='utf-8')
     return train
 
 def handleServiceType(x):
@@ -110,9 +103,9 @@ def fileTypeFeature(data):
     data['service_type'] = data['service_type'].apply(lambda x: handleServiceType(x))
     # 处理以数字为类别的特征
     type_feature = ['cust_sex', 'area_id', 'brand_flag', 'heyue_flag', 'activity_type', 'is_limit_flag', 'product_type',
-                    '5g_flag', 'service_type','5g_city_flag', 'app_type_id']  # prov_id
+                    'is_5g_flag', 'service_type','is_5g_city_flag', 'app_type_id','one_city_flag']  # prov_id
     # 检查0,1类别特征值
-    feature1 = ['5g_flag','5g_city_flag','is_limit_flag','heyue_flag']
+    feature1 = ['is_5g_flag','is_5g_city_flag','is_limit_flag','heyue_flag','one_city_flag']
     for x in feature1:
         data[x] = data[x].apply(lambda x:handleOneZeroFeature(x))
     # 处理area_id字段
@@ -148,6 +141,9 @@ def addTypeFeature(data):
     area_id_list = ['1', '2', '3', '4', '5', '6']
     index_n1 = 4
     data,count = handleActivityType(data,'area_id',area_id_list,index_n1,count)
+    one_city_flag_list = ['0','1']
+    index_n2 = 37
+    data, count = handleActivityType(data, 'one_city_flag', one_city_flag_list, index_n2, count)
     return data
 
 # 填补activiate_type字段的缺失值
@@ -163,6 +159,7 @@ def handleActivityType(data,feature,type_list,index_n,count):
     # 填补缺失的值
     activity_type_qs = activity_type_set0 - activity_type_set
     n = data.shape[0]
+    print("--- activity : ",data.shape)
     for i in activity_type_qs:
         a = data.iloc[-1, :].T
         data.drop(labels=n-count, inplace=True)
@@ -175,12 +172,11 @@ def handleActivityType(data,feature,type_list,index_n,count):
 
 # 使用均值填充缺失的数据，同时对数据进行归一化处理
 def fileNumberFeature(data):
-    nums_params = ['innet_months', 'cust_sex', 'cert_age', 'total_fee', 'jf_flux', 'fj_arpu', 'ct_voice_fee','total_flux', 'total_dura', 'roam_dura',
-                   'total_times', 'total_nums', 'local_nums', 'roam_nums', 'in_cnt', 'out_cnt', 'out_dura', 'price','imei_duration','shejiao_active_days',
-                   'shejiao_visit_cnt', 'xinwen_active_days', 'xinwen_visit_cnt','shipin_active_days', 'shipin_visit_cnt', 'dshipin_active_days', 'dshipin_visit_cnt',
-                   'zhibo_active_days', 'zhibo_visit_cnt', 'waimai_active_days', 'ditudaohang_visit_cnt', 'luntan_active_days', 'luntan_visit_cnt', 'shouji_shoping_active_days',
-                   'shouji_shoping_visit_cnt','liulanqi_active_days', 'liulanqi_visit_cnt', 'wenhua_active_days', 'wenhua_visit_cnt', 'youxi_active_days', 'youxi_visit_cnt',
-                   'yinyue_active_days', 'yinyue_visit_cnt', 'work_fze_active_days', 'work_fze_visit_cnt', 'jinrong_active_days', 'app_active_days','app_visit_dura']
+    nums_params = ['innet_months', 'cust_sex', 'cert_age', 'total_fee', 'jf_flux', 'fj_arpu', 'ct_voice_fee','total_flux', 'total_dura', 'roam_dura','total_times', 'total_nums', 'local_nums', 'roam_nums', 'in_cnt',
+                   'out_cnt', 'in_dura','out_dura', 'price','imei_duration','shejiao_active_days','shejiao_visit_cnt', 'xinwen_active_days', 'xinwen_visit_cnt','shipin_active_days', 'shipin_visit_cnt',
+                   'dshipin_active_days', 'dshipin_visit_cnt','zhibo_active_days', 'zhibo_visit_cnt', 'waimai_active_days', 'ditudaohang_visit_cnt', 'luntan_active_days', 'luntan_visit_cnt', 'shouji_shoping_active_days',
+                   'shouji_shoping_visit_cnt','liulanqi_active_days', 'liulanqi_visit_cnt', 'wenhua_active_days', 'wenhua_visit_cnt', 'youxi_active_days', 'youxi_visit_cnt', 'yinyue_active_days', 'yinyue_visit_cnt',
+                   'work_fze_active_days','waimai_visit_cnt','ditudaohang_active_days', 'work_fze_visit_cnt', 'jinrong_active_days', 'app_active_days','app_visit_dura']
 
     # 单独处理avg_duratioin字段
     # data['avg_duratioin'] = data['avg_duratioin'].apply(pd.to_numeric, errors='coerce').fillna(13.6)
@@ -205,7 +201,7 @@ def dropFeature(dataF, features):
 
 def handleTypeFeature(data):
     type_feature = ['cust_sex', 'area_id', 'brand_flag', 'heyue_flag', 'activity_type','is_limit_flag', 'product_type',
-                    '5g_flag', 'service_type', '5g_city_flag','app_type_id']
+                    'is_5g_flag', 'service_type', 'is_5g_city_flag','app_type_id','one_city_flag']
     #type_feature = ['product_type']  # app_type_id
     for f in type_feature:
         dummies = pd.get_dummies(data[f], prefix=f)
@@ -330,6 +326,8 @@ def dataHandles(data):
     # 处理area_id字段
     data = handleAreaidFeature(data)
     # 填补特征工程的缺失值
+    print('--------- 数据info - addTypeFeature ----------')
+    ##  print(data.info())
     data = addTypeFeature(data)
     # 填充列别特征
     data = fileTypeFeature(data)
@@ -387,7 +385,7 @@ def xgboostModelTrain(x_train, y_train, x_test, y_test):
     #pickle.dump(model, open("D:/data/python/work/xgb_5g_shipincailing.dat", "wb"))
     #model.get_booster().save_model('D:/data/python/work/xgb_5g_shipincailing.model')
     ans = model.predict(xgb_test)
-    print('预测值AUC为 ：%f' % roc_auc_score(y_test, ans))
+    #print('预测值AUC为 ：%f' % roc_auc_score(y_test, ans))
     # 显示重要特征
     plot_importance(model)
     plt.show()
@@ -403,41 +401,35 @@ def writeDataToCsv(df, ans, path):
 
 def getModelResult(trainFilePath,testFilePath,labels):
     filename = testFilePath[-7:-4]
-    all_params = ['prov_id', 'user_id', 'cust_id', 'product_id', 'area_id', 'device_number', 'innet_months','service_type', 'cust_sex', 'cert_age',
-                  'total_fee', 'jf_flux', 'fj_arpu', 'ct_voice_fee', 'total_flux', 'total_dura', 'roam_dura','total_times', 'total_nums', 'local_nums',
-                  'roam_nums', 'in_cnt', 'out_cnt', 'in_dura', 'out_dura', 'heyue_flag', 'activity_type', 'is_limit_flag', 'product_type', '5g_flag',
-                  'brand', 'brand_flag', 'brand_detail', 'price', 'imei_duration', 'avg_duratioin', '5g_city_flag','one_city_flag', 'shejiao_active_days',
-                  'shejiao_visit_cnt', 'xinwen_active_days', 'xinwen_visit_cnt', 'shipin_active_days', 'shipin_visit_cnt', 'dshipin_active_days',
-                  'dshipin_visit_cnt', 'zhibo_active_days', 'zhibo_visit_cnt', 'waimai_active_days', 'waimai_visit_cnt','ditudaohang_active_days',
-                  'ditudaohang_visit_cnt', 'luntan_active_days', 'luntan_visit_cnt', 'shouji_shoping_active_days', 'shouji_shoping_visit_cnt',
-                  'liulanqi_active_days', 'liulanqi_visit_cnt', 'wenhua_active_days', 'wenhua_visit_cnt','youxi_active_days', 'youxi_visit_cnt',
-                  'yinyue_active_days', 'yinyue_visit_cnt', 'work_fze_active_days', 'work_fze_visit_cnt', 'jinrong_active_days', 'jinrong_visit_cnt',
-                  'app_type_id', 'app_active_days', 'app_visit_dura']
-    feature_params = [0,4,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,31,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,
-                      48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71]
-    result_feature = [0,1,3,5,6,7]
-    result_feature = ['prov_id', 'user_id', 'product_id', 'device_number', 'innet_months', 'service_type']
+    all_params = ['prov_id', 'user_id', 'cust_id', 'product_id', 'area_id', 'device_number', 'innet_months','service_type', 'cust_sex', 'cert_age',  #9
+                  'total_fee', 'jf_flux', 'fj_arpu', 'ct_voice_fee', 'total_flux', 'total_dura', 'roam_dura','total_times', 'total_nums', 'local_nums',#19
+                  'roam_nums', 'in_cnt', 'out_cnt', 'in_dura', 'out_dura', 'heyue_flag', 'activity_type', 'is_limit_flag', 'product_type', 'is_5g_flag',#29
+                  'brand', 'brand_flag', 'brand_detail', 'price', 'imei_duration', 'avg_duratioin', 'is_5g_city_flag','one_city_flag', 'shejiao_active_days',#38
+                  'shejiao_visit_cnt', 'xinwen_active_days', 'xinwen_visit_cnt', 'shipin_active_days', 'shipin_visit_cnt', 'dshipin_active_days',#44
+                  'dshipin_visit_cnt', 'zhibo_active_days', 'zhibo_visit_cnt', 'waimai_active_days', 'waimai_visit_cnt','ditudaohang_active_days',#50
+                  'ditudaohang_visit_cnt', 'luntan_active_days', 'luntan_visit_cnt', 'shouji_shoping_active_days', 'shouji_shoping_visit_cnt',#55
+                  'liulanqi_active_days', 'liulanqi_visit_cnt', 'wenhua_active_days', 'wenhua_visit_cnt','youxi_active_days', 'youxi_visit_cnt',#61
+                  'yinyue_active_days', 'yinyue_visit_cnt', 'work_fze_active_days', 'work_fze_visit_cnt', 'jinrong_active_days', 'jinrong_visit_cnt',#67
+                  'app_type_id', 'app_active_days', 'app_visit_dura']#70
+
     # 根据斯皮尔曼相关性结果去除avg_duratioin ，jinrong_visit_cnt
     # 根据特征重要性去除product_type_5G
-    feature_params = ['area_id', 'innet_months', 'service_type', 'cust_sex', 'cert_age', 'total_fee','jf_flux', 'fj_arpu', 'ct_voice_fee', 'total_flux', 'total_dura', 'roam_dura',
-                      'total_times', 'total_nums', 'local_nums', 'roam_nums', 'in_cnt', 'out_cnt', 'out_dura','heyue_flag', 'activity_type', 'is_limit_flag',
-                      'product_type', '5g_flag', 'brand_flag', 'price', 'imei_duration', '5g_city_flag', 'shejiao_active_days', 'shejiao_visit_cnt', 'xinwen_active_days', 'xinwen_visit_cnt', 'shipin_active_days',
-                      'shipin_visit_cnt', 'dshipin_active_days','dshipin_visit_cnt', 'zhibo_active_days', 'zhibo_visit_cnt', 'waimai_active_days', 'ditudaohang_visit_cnt', 'luntan_active_days',
-                      'luntan_visit_cnt', 'shouji_shoping_active_days', 'shouji_shoping_visit_cnt','liulanqi_active_days', 'liulanqi_visit_cnt', 'wenhua_active_days',
-                      'wenhua_visit_cnt', 'youxi_active_days', 'youxi_visit_cnt', 'yinyue_active_days','yinyue_visit_cnt', 'work_fze_active_days',
-                      'work_fze_visit_cnt', 'jinrong_active_days', 'app_type_id', 'app_active_days', 'app_visit_dura']
 
-    result_feature = ['prov_id', 'user_id', 'product_id', 'device_number', 'innet_months', 'service_type']
-
+    result_feature = [0,1,3,4,5,6,7,8,9,10,14,15,32,33,34,68,69,70]
     # 根据字段的空值率（> 50%） 剔除 in_dura，waimai_visit_cnt，ditudaohang_active_days
     #labels = ['flag']
-    #train_path = 'D:/data/python/work/qwr_woyinyue_basic_result3.txt'
-    #test_path = 'D:/data/python/work/qwr_woyinyue_basic_result4.txt'
+
     names = all_params + labels
+
     # 读取数据
     print('开始读取数据 - ',strftime("%Y-%m-%d %H:%M:%S", localtime()))
     train_data = readData(trainFilePath, all_params + ['flag'])
     test_data = readData1(testFilePath, names)
+
+    # 获取分析特征数据
+    #train_data = train_data.iloc[:, feature_params]
+    #test_data = test_data.iloc[:, feature_params]
+
     # 数据分析
     # dataAnalysis(train_data,all_params)
     # 数据处理
@@ -445,13 +437,19 @@ def getModelResult(trainFilePath,testFilePath,labels):
     train_data = dataHandles(train_data)
     test_data = dataHandles(test_data)
     # 备份测试数据
-    test1 = test_data[result_feature]
+    print('--------------------------------------------------')
+    print(test_data.shape)
+    test1 = test_data.iloc[:,result_feature]
     # 获取标签字段
     train_data = handleTypeFlag(train_data)
     y_train = train_data['flag']
-    test_data = handleTypeFlag(test_data)
-    y_test = test_data['flag']
 
+    #test_data = handleTypeFlag(test_data)
+    #y_test = test_data['flag']
+
+    ## 删除flag列
+    train_data.drop('flag', axis=1, inplace=True)
+    #test_data.drop('flag', axis=1, inplace=True)
     '''
     # 获取斯皮尔曼相关系数
     for f in feature_params:
@@ -460,9 +458,13 @@ def getModelResult(trainFilePath,testFilePath,labels):
     # 根据斯皮尔曼相关性结果去除avg_duratioin ，jinrong_visit_cnt
     # 根据特征重要性去除product_type_5G
     '''
-    # 获取分析特征数据
-    train_data = train_data[feature_params]
-    test_data = test_data[feature_params]
+
+    # 删除不需要的特征数据
+    drop_feature_params = ['prov_id', 'user_id', 'cust_id', 'product_id', 'device_number', 'brand', 'brand_detail',
+                           'avg_duratioin', 'jinrong_visit_cnt']
+    for f in drop_feature_params:
+        train_data = dropFeature(train_data, f)
+        test_data = dropFeature(test_data, f)
 
     # 处理类别特征和特征离散化
     print('分类特征处理及离散化 - ', strftime("%Y-%m-%d %H:%M:%S", localtime()))
@@ -473,7 +475,7 @@ def getModelResult(trainFilePath,testFilePath,labels):
     print(test_data.shape)
 
     # 训练模型
-    #y_test = ''
+    y_test = ''
     ans = xgboostModelTrain(train_data, y_train, test_data, y_test)
     
     print('------------------------- 开始数据写入 -------------------------------')
@@ -486,18 +488,19 @@ def getModelResult(trainFilePath,testFilePath,labels):
 
 '''
 if __name__ == '__main__':
-    trainFilePath = 'D:/data/python/work/qwr_woyinyue_basic_result3.txt'
+    trainFilePath = 'D:/data/python/work/qwr_woyinyue_basic_result1.txt'
     test_path = 'D:/data/python/work/qwr_woyinyue_basic_result4.txt'
-    paths = [test_path]
+    #paths = [test_path]
     test_path1 = 'D:/data/python/work/qwr_woyinyue_user_result2006_087.txt'
     test_path2 = 'D:/data/python/work/qwr_woyinyue_user_result2006_036.txt'
     test_path3 = 'D:/data/python/work/qwr_woyinyue_user_result2006_089.txt'
     test_path4 = 'D:/data/python/work/qwr_woyinyue_user_result2006_070.txt'
     test_path5 = 'D:/data/python/work/qwr_woyinyue_user_result2006_013.txt'
 
-    #paths = [test_path1,test_path2]
+    paths = [test_path1,test_path4]
 
     labels = ['flag']
+    labels = []
     for path in paths:
         getModelResult(trainFilePath, path,labels)
         print(path + ' : 完成')
