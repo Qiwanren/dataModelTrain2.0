@@ -6,6 +6,16 @@
     1、卡方检验
     2、斯皮尔蒙检验
     3、
+
+ 构建新的特征
+    1、PolynomialFeatures
+        介绍：使用 sklearn.preprocessing.PolynomialFeatures 这个类可以进行特征的构造，构造的方式就是特征与特征相乘（自己与自己，自己与其他人），这种方式叫做使用多项式的方式。
+              例如：有 a、b 两个特征，那么它的 2 次多项式的次数为 [1,a,b,a2,ab,b2]。
+        参数介绍：
+              degree：控制多项式的次数；
+              interaction_only：默认为 False，如果指定为 True，那么就不会有特征自己和自己结合的项，组合的特征中没有 a^2 和 b^2；
+              include_bias：默认为 True 。如果为 True 的话，那么结果中就会有 0 次幂项，即全为 1 这一列
+        应用：
 '''
 
 '''
@@ -13,6 +23,8 @@
     1、卡方检验专用于分类算法，用于选择特征
 '''
 from sklearn.datasets import load_digits
+import pandas as pd
+import numpy as np
 
 def chosefeaturebycli2(X,y,k):
     from sklearn.feature_selection import SelectKBest, chi2
@@ -21,7 +33,19 @@ def chosefeaturebycli2(X,y,k):
     X_new = SelectKBest(chi2, k=k).fit_transform(X, y)
     print(X_new.shape)
 
+def PolynomialFeaturesDemo():
+    X = np.arange(6).reshape(3,2)
+    print(X)
+    from sklearn.preprocessing import PolynomialFeatures
+    poly = PolynomialFeatures(degree=2)
+    res = poly.fit_transform(X)
+    print(res)
+    poly = PolynomialFeatures(interaction_only=True, include_bias=False)
+    res1 = poly.fit_transform(X)
+    print(res1)
+
 
 if __name__ == '__main__':
     X, y = load_digits(return_X_y=True)
-    chosefeaturebycli2(X,y,20)
+    #chosefeaturebycli2(X,y,20)
+    PolynomialFeaturesDemo()
