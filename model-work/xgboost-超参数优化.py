@@ -1,8 +1,7 @@
 import pickle
 
 import pandas as pd
-import json
-import lightgbm as lgb
+
 from time import strftime, localtime
 import xgboost as xgb
 from sklearn.metrics import roc_auc_score
@@ -37,7 +36,7 @@ def readData(path, names):
 
 
 def readData1(path, names):
-    train = pd.read_csv(filepath_or_buffer=path, sep=",", names=names, encoding='utf-8')
+    train = pd.read_csv(filepath_or_buffer=path, sep="|", names=names, encoding='utf-8')
     return train
 
 
@@ -115,9 +114,9 @@ def fileTypeFeature(data):
     data['service_type'] = data['service_type'].apply(lambda x: handleServiceType(x))
     # 处理以数字为类别的特征
     type_feature = ['cust_sex', 'area_id', 'brand_flag', 'heyue_flag', 'activity_type', 'is_limit_flag', 'product_type',
-                    'is_5g_flag', 'service_type', 'is_5g_city_flag', 'app_type_id', 'one_city_flag']  # prov_id
+                    'is_5g_flag', 'service_type', 'is_5g_city_flag', 'app_type_id']  # prov_id
     # 检查0,1类别特征值
-    feature1 = ['is_5g_flag', 'is_5g_city_flag', 'is_limit_flag', 'heyue_flag', 'one_city_flag']
+    feature1 = ['is_5g_flag', 'is_5g_city_flag', 'is_limit_flag', 'heyue_flag']
     for x in feature1:
         data[x] = data[x].apply(lambda x: handleOneZeroFeature(x))
     # 处理area_id字段
@@ -148,11 +147,11 @@ def fileTypeFeature(data):
 
 def addTypeFeature(data):
     activity_type_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14']
-    index_n = 21
+    index_n = 26
     count = 1
     data, count = handleActivityType(data, 'activity_type', activity_type_list, index_n, count)
     area_id_list = ['1', '2', '3', '4', '5', '6']
-    index_n1 = 0
+    index_n1 = 4
     data, count = handleActivityType(data, 'area_id', area_id_list, index_n1, count)
     return data
 
@@ -183,19 +182,12 @@ def handleActivityType(data, feature, type_list, index_n, count):
 
 # 使用均值填充缺失的数据，同时对数据进行归一化处理
 def fileNumberFeature(data):
-    nums_params = ['innet_months', 'cust_sex', 'cert_age', 'total_fee', 'jf_flux', 'fj_arpu', 'ct_voice_fee',
-                   'total_flux', 'total_dura', 'roam_dura', 'total_times', 'total_nums', 'local_nums', 'roam_nums',
-                   'in_cnt',
-                   'out_cnt', 'in_dura', 'out_dura', 'price', 'imei_duration', 'shejiao_active_days',
-                   'shejiao_visit_cnt', 'xinwen_active_days', 'xinwen_visit_cnt', 'shipin_active_days',
-                   'shipin_visit_cnt',
-                   'dshipin_active_days', 'dshipin_visit_cnt', 'zhibo_active_days', 'zhibo_visit_cnt',
-                   'waimai_active_days', 'ditudaohang_visit_cnt', 'luntan_active_days', 'luntan_visit_cnt',
-                   'shouji_shoping_active_days',
-                   'shouji_shoping_visit_cnt', 'liulanqi_active_days', 'liulanqi_visit_cnt', 'wenhua_active_days',
-                   'wenhua_visit_cnt', 'youxi_active_days', 'youxi_visit_cnt', 'yinyue_active_days', 'yinyue_visit_cnt',
-                   'work_fze_active_days', 'waimai_visit_cnt', 'ditudaohang_active_days', 'work_fze_visit_cnt',
-                   'jinrong_active_days', 'app_active_days', 'app_visit_dura']
+    nums_params = ['innet_months', 'cust_sex', 'cert_age', 'total_fee', 'jf_flux', 'fj_arpu', 'ct_voice_fee', 'total_flux', 'total_dura', 'roam_dura',
+                   'total_times', 'total_nums', 'local_nums', 'roam_nums', 'in_cnt', 'out_cnt', 'out_dura', 'price','imei_duration', 'shejiao_active_days',
+                   'shejiao_visit_cnt', 'xinwen_active_days', 'xinwen_visit_cnt', 'shipin_active_days','shipin_visit_cnt', 'dshipin_active_days', 'dshipin_visit_cnt',
+                   'zhibo_active_days', 'zhibo_visit_cnt', 'waimai_active_days', 'ditudaohang_visit_cnt','luntan_active_days', 'luntan_visit_cnt', 'shouji_shoping_active_days',
+                   'shouji_shoping_visit_cnt', 'liulanqi_active_days', 'liulanqi_visit_cnt', 'wenhua_active_days','wenhua_visit_cnt', 'youxi_active_days', 'youxi_visit_cnt',
+                   'yinyue_active_days', 'yinyue_visit_cnt', 'work_fze_active_days', 'work_fze_visit_cnt','jinrong_active_days', 'app_active_days', 'app_visit_dura']
 
     # 单独处理avg_duratioin字段
     # data['avg_duratioin'] = data['avg_duratioin'].apply(pd.to_numeric, errors='coerce').fillna(13.6)
@@ -221,7 +213,7 @@ def dropFeature(dataF, features):
 
 def handleTypeFeature(data):
     type_feature = ['cust_sex', 'area_id', 'brand_flag', 'heyue_flag', 'activity_type', 'is_limit_flag', 'product_type',
-                    'is_5g_flag', 'service_type', 'is_5g_city_flag', 'app_type_id', 'one_city_flag']
+                    'is_5g_flag', 'service_type', 'is_5g_city_flag', 'app_type_id']
     # type_feature = ['product_type']  # app_type_id
     for f in type_feature:
         dummies = pd.get_dummies(data[f], prefix=f)
@@ -256,8 +248,6 @@ def handleCheckErrorData(x):
     else:
         return None
 
-
-#
 def dropErrorReadRows(data):
     # 删除不满足的列
     product_type_values = ['2I', 'bjl', '5G', 'other']
@@ -286,7 +276,6 @@ def stripAndToNumber(x):
     from builtins import str
     x1 = str(x)
     return int(x1.strip())
-
 
 def handleOneZeroFeature(x):
     from builtins import str
@@ -373,8 +362,6 @@ def dataHandles(data):
 '''
 处理类别字段和部分特征离散化
 '''
-
-
 def datahandles2(data):
     # 处理类别字段
     data = handleTypeFeature(data)
@@ -382,50 +369,6 @@ def datahandles2(data):
     # data = featurePSF(data)
     return data
 
-def LighGBMmodelTrain(x_train, y_train, x_test, y_test):
-    # create dataset for lightgbm
-    lgb_train = lgb.Dataset(x_train, y_train)
-    #lgb_eval = lgb.Dataset(x_test, y_test, reference=lgb_train)
-    lgb_eval = lgb.Dataset(x_test, reference=lgb_train)
-    # specify your configurations as a dict
-    params = {
-        'task': 'train',
-        'boosting_type': 'gbdt',
-        'objective': 'binary',
-        'metric': {'l2', 'auc'},
-        'num_leaves': 31,
-        'learning_rate': 0.05,
-        'feature_fraction': 0.9,
-        'bagging_fraction': 0.8,
-        'bagging_freq': 5,
-        'verbose': 0
-    }
-    print('Start training...')
-    # train
-    gbm = lgb.train(params,
-                    lgb_train,
-                    num_boost_round=20,
-                    valid_sets=lgb_eval,
-                    early_stopping_rounds=5)
-    print('Save model...')
-    # save model to file
-    model_path = 'D:/data/python/work/model/'
-    gbm.save_model(model_path + 'lightgbm/model.txt')
-    print('Start predicting...')
-    # predict
-    y_pred = gbm.predict(x_test, num_iteration=gbm.best_iteration)
-    # eval
-    #print(y_pred)
-   # print('The roc of prediction is:', roc_auc_score(y_test, y_pred))
-    # dump model to json (and save to file)
-    model_json = gbm.dump_model()
-    with open(model_path + 'lightgbm/model.json', 'w+') as f:
-        json.dump(model_json, f, indent=4)
-    print('Feature names:', gbm.feature_name())
-    # feature importances
-    print('Feature importances:', list(gbm.feature_importance()))
-
-    return y_pred
 
 def xgboostModelTrain(x_train, y_train, x_test, y_test):
     # 生成DMatrix,字段内容必须为数字或者boolean
@@ -458,10 +401,10 @@ def xgboostModelTrain(x_train, y_train, x_test, y_test):
     importance = sorted(importance.items(), key=lambda x: x[1], reverse=True)
     print(importance)
     ## 特征拟合
-    # model.fit(x_train,y_train)
-    # showTree(model)
-    # pickle.dump(model, open("D:/data/python/work/xgb_5g_shipincailing.dat", "wb"))
-    # model.get_booster().save_model('D:/data/python/work/xgb_5g_shipincailing.model')
+    # model-work.fit(x_train,y_train)
+    # showTree(model-work)
+    # pickle.dump(model-work, open("D:/data/python/work/xgb_5g_shipincailing.dat", "wb"))
+    # model-work.get_booster().save_model('D:/data/python/work/xgb_5g_shipincailing.model-work')
     ans = model.predict(xgb_test)
     print('预测值AUC为 ：%f' % roc_auc_score(y_test, ans))
     # 显示重要特征
@@ -481,49 +424,36 @@ def writeDataToCsv(df, ans, path):
 
 def getModelResult(trainFilePath, testFilePath, labels):
     filename = testFilePath[-7:-4]
-    all_params = ['prov_id', 'user_id', 'cust_id', 'product_id', 'area_id', 'device_number', 'innet_months',
-                  'service_type', 'cust_sex', 'cert_age',  # 9
-                  'total_fee', 'jf_flux', 'fj_arpu', 'ct_voice_fee', 'total_flux', 'total_dura', 'roam_dura',
-                  'total_times', 'total_nums', 'local_nums',  # 19
-                  'roam_nums', 'in_cnt', 'out_cnt', 'in_dura', 'out_dura', 'heyue_flag', 'activity_type',
-                  'is_limit_flag', 'product_type', 'is_5g_flag',  # 29
-                  'brand', 'brand_flag', 'brand_detail', 'price', 'imei_duration', 'avg_duratioin', 'is_5g_city_flag',
-                  'one_city_flag', 'shejiao_active_days',  # 38
-                  'shejiao_visit_cnt', 'xinwen_active_days', 'xinwen_visit_cnt', 'shipin_active_days',
-                  'shipin_visit_cnt', 'dshipin_active_days',  # 44
-                  'dshipin_visit_cnt', 'zhibo_active_days', 'zhibo_visit_cnt', 'waimai_active_days', 'waimai_visit_cnt',
-                  'ditudaohang_active_days',  # 50
-                  'ditudaohang_visit_cnt', 'luntan_active_days', 'luntan_visit_cnt', 'shouji_shoping_active_days',
-                  'shouji_shoping_visit_cnt',  # 55
-                  'liulanqi_active_days', 'liulanqi_visit_cnt', 'wenhua_active_days', 'wenhua_visit_cnt',
-                  'youxi_active_days', 'youxi_visit_cnt',  # 61
-                  'yinyue_active_days', 'yinyue_visit_cnt', 'work_fze_active_days', 'work_fze_visit_cnt',
-                  'jinrong_active_days', 'jinrong_visit_cnt',  # 67
-                  'app_type_id', 'app_active_days', 'app_visit_dura']  # 70
+    all_params = ['prov_id', 'user_id', 'cust_id', 'product_id', 'area_id', 'device_number', 'innet_months','service_type', 'cust_sex', 'cert_age',
+                  'total_fee', 'jf_flux', 'fj_arpu', 'ct_voice_fee', 'total_flux', 'total_dura', 'roam_dura','total_times', 'total_nums', 'local_nums',
+                  'roam_nums', 'in_cnt', 'out_cnt', 'in_dura', 'out_dura', 'heyue_flag', 'activity_type','is_limit_flag', 'product_type', 'is_5g_flag',
+                  'brand', 'brand_flag', 'brand_detail', 'price', 'imei_duration', 'avg_duratioin', 'is_5g_city_flag','one_city_flag', 'shejiao_active_days',
+                  'shejiao_visit_cnt', 'xinwen_active_days', 'xinwen_visit_cnt', 'shipin_active_days', 'shipin_visit_cnt', 'dshipin_active_days',
+                  'dshipin_visit_cnt', 'zhibo_active_days', 'zhibo_visit_cnt', 'waimai_active_days', 'waimai_visit_cnt','ditudaohang_active_days',
+                  'ditudaohang_visit_cnt', 'luntan_active_days', 'luntan_visit_cnt', 'shouji_shoping_active_days','shouji_shoping_visit_cnt',
+                  'liulanqi_active_days', 'liulanqi_visit_cnt', 'wenhua_active_days', 'wenhua_visit_cnt', 'youxi_active_days', 'youxi_visit_cnt',
+                  'yinyue_active_days', 'yinyue_visit_cnt', 'work_fze_active_days', 'work_fze_visit_cnt','jinrong_active_days', 'jinrong_visit_cnt',
+                  'app_type_id', 'app_active_days', 'app_visit_dura']
+
+    feature_params = [0, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+                      31, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,48, 49, 50, 51, 52, 53, 54, 55, 56,
+                      57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71]
 
     # 根据斯皮尔曼相关性结果去除avg_duratioin ，jinrong_visit_cnt
     # 根据特征重要性去除product_type_5G
 
+
+    #result_feature = ['prov_id', 'user_id', 'product_id', 'device_number', 'innet_months', 'service_type']
     result_feature = [0, 1, 3, 5, 6, 7]
     # 根据字段的空值率（> 50%） 剔除 in_dura，waimai_visit_cnt，ditudaohang_active_days
     # labels = ['flag']
-
+    # train_path = 'D:/data/python/work/qwr_woyinyue_basic_result3.txt'
+    # test_path = 'D:/data/python/work/qwr_woyinyue_basic_result4.txt'
     names = all_params + labels
     # 读取数据
     print('开始读取数据 - ', strftime("%Y-%m-%d %H:%M:%S", localtime()))
     train_data = readData(trainFilePath, all_params + ['flag'])
     test_data = readData1(testFilePath, names)
-
-    # 获取分析特征数据
-    # train_data = train_data.iloc[:, feature_params]
-    # test_data = test_data.iloc[:, feature_params]
-    # 删除不需要的特征数据
-    drop_feature_params = ['prov_id', 'user_id', 'cust_id', 'product_id', 'device_number', 'brand', 'brand_detail',
-                           'avg_duratioin', 'jinrong_visit_cnt']
-    for f in drop_feature_params:
-        train_data = dropFeature(train_data, f)
-        test_data = dropFeature(test_data, f)
-
     # 数据分析
     # dataAnalysis(train_data,all_params)
     # 数据处理
@@ -531,15 +461,13 @@ def getModelResult(trainFilePath, testFilePath, labels):
     train_data = dataHandles(train_data)
     test_data = dataHandles(test_data)
     # 备份测试数据
-    test1 = test_data.iloc[:, result_feature]
+    test1 = test_data.iloc[:,result_feature]
     # 获取标签字段
     train_data = handleTypeFlag(train_data)
     y_train = train_data['flag']
     test_data = handleTypeFlag(test_data)
     y_test = test_data['flag']
-    ## 删除flag列
-    train_data.drop('flag', axis=1, inplace=True)
-    test_data.drop('flag', axis=1, inplace=True)
+
     '''
     # 获取斯皮尔曼相关系数
     for f in feature_params:
@@ -548,6 +476,9 @@ def getModelResult(trainFilePath, testFilePath, labels):
     # 根据斯皮尔曼相关性结果去除avg_duratioin ，jinrong_visit_cnt
     # 根据特征重要性去除product_type_5G
     '''
+    # 获取分析特征数据
+    train_data = train_data.iloc[:,feature_params]
+    test_data = test_data.iloc[:,feature_params]
 
     # 处理类别特征和特征离散化
     print('分类特征处理及离散化 - ', strftime("%Y-%m-%d %H:%M:%S", localtime()))
@@ -558,15 +489,14 @@ def getModelResult(trainFilePath, testFilePath, labels):
     print(test_data.shape)
 
     # 训练模型
-    # y_test = ''
+    #y_test = ''
     ans = xgboostModelTrain(train_data, y_train, test_data, y_test)
-    train_data['score'] = ans
-    ans1 = LighGBMmodelTrain(train_data,y_train,test_data)
 
     print('------------------------- 开始数据写入 -------------------------------')
     path = 'D:/data/python/work/result_' + filename + '.csv'
     print('开始写入数据 - ', strftime("%Y-%m-%d %H:%M:%S", localtime()))
     writeDataToCsv(test1, ans, path)
+
 
 '''
 加入prov_id : 预测值AUC为 ：0.767211
@@ -576,9 +506,8 @@ def getModelResult(trainFilePath, testFilePath, labels):
 if __name__ == '__main__':
     trainFilePath = 'D:/data/python/work/qwr_woyinyue_basic_result3.txt'
     test_path = 'D:/data/python/work/qwr_woyinyue_basic_result4.txt'
-    paths = [test_path]
 
-    # paths = [test_path1,test_path2]
+    paths = [test_path]
 
     labels = ['flag']
     for path in paths:

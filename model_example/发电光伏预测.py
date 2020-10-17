@@ -471,12 +471,12 @@ def method02():
             # Validation data for the fold
             valid_features, valid_labels = features[valid_indices], labels[valid_indices]
 
-            # Create the model
+            # Create the model-work
             model = xgb.XGBRegressor(objective='reg:linear', n_estimators=16000, min_child_weight=1, num_leaves=20,
                                      learning_rate=0.01, max_depth=6, n_jobs=20,
                                      subsample=0.6, colsample_bytree=0.4, colsample_bylevel=1)
 
-            # Train the model
+            # Train the model-work
             model.fit(train_features, train_labels,
                       eval_set=[(valid_features, valid_labels), (train_features, train_labels)],
                       early_stopping_rounds=300, verbose=600)
@@ -818,12 +818,12 @@ def method03():
             # Validation data for the fold
             valid_features, valid_labels = features[valid_indices], labels[valid_indices]
 
-            # Create the model
+            # Create the model-work
             model = lgb.LGBMRegressor(objective='regression', n_estimators=12000, min_child_samples=20, num_leaves=20,
                                       learning_rate=0.005, feature_fraction=0.8,
                                       subsample=0.5, n_jobs=-1, random_state=50)
 
-            # Train the model
+            # Train the model-work
             model.fit(train_features, train_labels, eval_metric='rmse',
                       eval_set=[(valid_features, valid_labels), (train_features, train_labels)],
                       eval_names=['valid', 'train'], categorical_feature=cat_indices,
