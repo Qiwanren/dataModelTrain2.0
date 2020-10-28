@@ -17,6 +17,7 @@
               include_bias：默认为 True 。如果为 True 的话，那么结果中就会有 0 次幂项，即全为 1 这一列
         应用：
 '''
+from model_example.dataHandle import getresultData2
 
 '''
 使用卡方检验选择特征
@@ -25,10 +26,8 @@
 from sklearn.datasets import load_digits
 import pandas as pd
 import numpy as np
-
+from sklearn.feature_selection import SelectKBest, chi2
 def chosefeaturebycli2(X,y,k):
-    from sklearn.feature_selection import SelectKBest, chi2
-    print(X.shape)
     # X_new = SelectKBest(chi2, k=20).fit_transform(X, y)
     X_new = SelectKBest(chi2, k=k).fit_transform(X, y)
     print(X_new.shape)
@@ -46,6 +45,8 @@ def PolynomialFeaturesDemo():
 
 
 if __name__ == '__main__':
-    X, y = load_digits(return_X_y=True)
+    #X, y = load_digits(return_X_y=True)
     #chosefeaturebycli2(X,y,20)
-    PolynomialFeaturesDemo()
+    #PolynomialFeaturesDemo()
+    X,y,result = getresultData2()
+    #print(X.shape)

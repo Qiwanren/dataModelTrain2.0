@@ -398,7 +398,7 @@ def LighGBMmodelTrain(x_train, y_train, x_test, y_test):
                     early_stopping_rounds=5)
     print('Save model-work...')
     # save model-work to file
-    model_path = 'D:/data/python/work/model-work/'
+    model_path = 'D:/data/python/work/model/'
     gbm.save_model(model_path + 'lightgbm/model-work.txt')
     print('Start predicting...')
     # predict

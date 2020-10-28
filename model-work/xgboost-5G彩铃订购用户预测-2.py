@@ -111,10 +111,6 @@ def fileTypeFeature(data):
     # 处理area_id字段
     area_id_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     data['area_id'] = data['area_id'].apply(lambda x:handleTypeID(x,area_id_list))
-    # area_id_list = [1.0,2.0,3.0,4.0,5.0,6.0]
-    # brand_flag_list = [1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0]
-    # activity_type = [1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0]
-    # app_type_id = [1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0]
     # 处理brand_flag字段
     brand_flag_list = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0]
     data['brand_flag'] = data['brand_flag'].apply(lambda x: handleTypeID(x, brand_flag_list))
@@ -369,11 +365,8 @@ def xgboostModelTrain(x_train, y_train, x_test, y_test):
         'colsample_bytree': 0.77,
         'reg_alpha': 1.0
     }
-
     ## 训练轮数
-    num_rounds = [215, 300, 400, 500]
     num_round = 500
-    print(num_round)
     printTime()
     ## 模型训练
     model = xgb.train(params, gb_train, num_round)

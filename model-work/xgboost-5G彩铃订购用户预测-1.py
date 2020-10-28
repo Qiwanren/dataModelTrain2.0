@@ -1,3 +1,5 @@
+import time
+
 import pandas as pd
 
 from time import strftime, localtime
@@ -454,6 +456,7 @@ def getModelResult(trainFilePath, testFilePath, labels):
                       31, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
                       48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71]
     result_feature = [0, 1, 3, 5, 6, 7]
+    result_feature = [0, 1, 4, 71]
     result_feature = ['prov_id', 'user_id', 'product_id', 'device_number', 'innet_months', 'service_type']
     # 根据斯皮尔曼相关性结果去除avg_duratioin ，jinrong_visit_cnt
     # 根据特征重要性去除product_type_5G
@@ -519,7 +522,9 @@ def getModelResult(trainFilePath, testFilePath, labels):
 
     # 训练模型
     # y_test = ''
+    print("24小时格式：" + time.strftime("%H:%M:%S"))
     ans = xgboostModelTrain(train_data, y_train, test_data, y_test)
+    print("24小时格式：" + time.strftime("%H:%M:%S"))
 
     print('------------------------- 开始数据写入 -------------------------------')
     path = 'D:/data/python/work/result_' + filename + '.csv'
